@@ -62,6 +62,11 @@ class _ExplorePageState extends State<ExplorePage> {
               
               final data = snapshot.data!;
               
+              // FILTER LOGIC
+              final filteredDesserts = data.featuredDesserts.where((dessert) {
+                return _selectedCategory == 'All' || dessert.category == _selectedCategory;
+              }).toList();
+
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +83,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       ),
                     ),
                     FeaturedDessertsSection(
-                      desserts: data.featuredDesserts,
+                      desserts: filteredDesserts, // Use filtered list
                       onDessertTap: (dessert) {
                         context.go('/0/restaurant/${dessert.id}');
                       },
@@ -101,6 +106,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       selectedCategory: _selectedCategory,
                       onCategoryTap: (cat) {
                         setState(() {
+                          // Toggle selection: if already selected, go back to 'All'
                           _selectedCategory = (_selectedCategory == cat.title) ? 'All' : cat.title;
                         });
                       },
