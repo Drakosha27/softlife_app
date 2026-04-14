@@ -25,6 +25,7 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   final MockPinkiePieService _service = MockPinkiePieService();
   String _selectedCategory = 'All';
+  bool isCreamFilterEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +45,20 @@ class _ExplorePageState extends State<ExplorePage> {
             onPressed: () => appState.toggleTheme(),
           ),
           IconButton(
-            icon: const Icon(Icons.opacity),
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                isCreamFilterEnabled = !isCreamFilterEnabled;
+              });
+            },
+            icon: AnimatedScale(
+              scale: isCreamFilterEnabled ? 1.2 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Icon(
+                Icons.opacity,
+                color: isCreamFilterEnabled ? const Color(0xFFF8BBD0) : Colors.grey,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -64,7 +77,11 @@ class _ExplorePageState extends State<ExplorePage> {
               
               // FILTER LOGIC
               final filteredDesserts = data.featuredDesserts.where((dessert) {
-                return _selectedCategory == 'All' || dessert.category == _selectedCategory;
+                bool matchesCategory = _selectedCategory == 'All' || dessert.category == _selectedCategory;
+                bool matchesCream = !isCreamFilterEnabled || 
+                    dessert.name.toLowerCase().contains('cream') || 
+                    dessert.tags.any((tag) => tag.toLowerCase().contains('cream'));
+                return matchesCategory && matchesCream;
               }).toList();
 
               return SingleChildScrollView(
@@ -82,11 +99,15 @@ class _ExplorePageState extends State<ExplorePage> {
                         ),
                       ),
                     ),
-                    FeaturedDessertsSection(
-                      desserts: filteredDesserts, // Use filtered list
-                      onDessertTap: (dessert) {
-                        context.go('/0/restaurant/${dessert.id}');
-                      },
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: FeaturedDessertsSection(
+                        key: ValueKey('featured_${_selectedCategory}_$isCreamFilterEnabled'),
+                        desserts: filteredDesserts,
+                        onDessertTap: (dessert) {
+                          context.go('/0/restaurant/${dessert.id}');
+                        },
+                      ),
                     ),
                     const SizedBox(height: 24),
 
